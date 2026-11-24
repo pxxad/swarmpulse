@@ -19,31 +19,48 @@ export default function ConvergenceChart({
     // Filter to one data point per completed iteration
     const iterMap = new Map();
     history.forEach(h => {
-      iterMap.set(h.iteration, { gbest: h.gbestFitness, mean: h.meanFitness });
+      if (h && h.iteration != null) {
+        iterMap.set(h.iteration, {
+          gbest: h.gbestFitness != null && !isNaN(h.gbestFitness) ? h.gbestFitness : 0,
+          mean: h.meanFitness != null && !isNaN(h.meanFitness) ? h.meanFitness : 0
+        });
+      }
     });
 
     const entries = Array.from(iterMap.entries()).sort((a, b) => a[0] - b[0]);
+    if (entries.length === 0) {
+      return { pointsGbest: [], pointsMean: [], minY: 0, maxY: 10, currentGbest: 0, currentMean: 0 };
+    }
 
     let lowY = Infinity;
     let highY = -Infinity;
 
     entries.forEach(([_, val]) => {
-      if (val.gbest < lowY) lowY = val.gbest;
-      if (val.gbest > highY) highY = val.gbest;
-      if (val.mean < lowY) lowY = val.mean;
-      if (val.mean > highY) highY = val.mean;
+      if (val.gbest != null && !isNaN(val.gbest)) {
+        if (val.gbest < lowY) lowY = val.gbest;
+        if (val.gbest > highY) highY = val.gbest;
+      }
+      if (val.mean != null && !isNaN(val.mean)) {
+        if (val.mean < lowY) lowY = val.mean;
+        if (val.mean > highY) highY = val.mean;
+      }
     });
 
-    if (knownOptimum && knownOptimum.value !== undefined) {
+    if (knownOptimum && knownOptimum.value !== undefined && !isNaN(knownOptimum.value)) {
       if (knownOptimum.value < lowY) lowY = knownOptimum.value;
       if (knownOptimum.value > highY) highY = knownOptimum.value;
+    }
+
+    if (lowY === Infinity || highY === -Infinity) {
+      lowY = 0;
+      highY = 10;
     }
 
     const rangeY = Math.max(1e-4, highY - lowY);
     const paddedMinY = lowY - rangeY * 0.08;
     const paddedMaxY = highY + rangeY * 0.08;
 
-    const maxT = Math.max(1, maxIterations);
+    const maxT = Math.max(1, maxIterations || 1);
 
     const pG = entries.map(([iter, val]) => ({
       x: paddingX + (iter / maxT) * (width - 2 * paddingX),
@@ -62,8 +79,8 @@ export default function ConvergenceChart({
       pointsMean: pM,
       minY: paddedMinY,
       maxY: paddedMaxY,
-      currentGbest: latest ? latest[1].gbest : 0,
-      currentMean: latest ? latest[1].mean : 0
+      currentGbest: latest && latest[1]?.gbest != null ? latest[1].gbest : 0,
+      currentMean: latest && latest[1]?.mean != null ? latest[1].mean : 0
     };
   }, [history, knownOptimum, maxIterations]);
 
@@ -87,13 +104,13 @@ export default function ConvergenceChart({
         <div style={{ display: 'flex', gap: '14px', fontSize: '11px', color: 'var(--color-text-muted)' }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
             <span style={{ width: 14, height: 2, backgroundColor: '#0284c7', display: 'inline-block' }}></span>
-            Global Best: <strong>{currentGbest.toFixed(4)}</strong>
+            Global Best: <strong>{currentGbest != null && !isNaN(currentGbest) ? currentGbest.toFixed(4) : '—'}</strong>
           </span>
           <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
             <span style={{ width: 14, height: 2, borderTop: '2px dashed #94a3b8', display: 'inline-block' }}></span>
-            Swarm Mean: <strong>{currentMean.toFixed(4)}</strong>
+            Swarm Mean: <strong>{currentMean != null && !isNaN(currentMean) ? currentMean.toFixed(4) : '—'}</strong>
           </span>
-          {knownOptimum && (
+          {knownOptimum && knownOptimum.value !== undefined && (
             <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
               <span style={{ width: 14, height: 2, backgroundColor: '#10b981', display: 'inline-block' }}></span>
               Target Optimum: <strong>{knownOptimum.value}</strong>

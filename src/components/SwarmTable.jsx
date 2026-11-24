@@ -32,7 +32,8 @@ export default function SwarmTable({
             </tr>
           </thead>
           <tbody>
-            {particles.map((p, idx) => {
+            {(particles || []).map((p, idx) => {
+              if (!p) return null;
               const isLeader = p.id === gbestParticleId;
               const isActive = idx === activeParticleIndex;
 
@@ -41,15 +42,15 @@ export default function SwarmTable({
               else if (isLeader) rowClass = 'leader-row';
 
               return (
-                <tr key={p.id} className={rowClass}>
+                <tr key={p.id ?? idx} className={rowClass}>
                   <td>
-                    <strong>{p.id}</strong>
+                    <strong>{p.id ?? `P${idx + 1}`}</strong>
                   </td>
-                  <td>[{p.position.map(n => n.toFixed(4)).join(', ')}]</td>
-                  <td>[{p.velocity.map(n => n.toFixed(4)).join(', ')}]</td>
-                  <td>{p.fitness.toFixed(4)}</td>
-                  <td>[{p.pbestPosition.map(n => n.toFixed(4)).join(', ')}]</td>
-                  <td>{p.pbestFitness.toFixed(4)}</td>
+                  <td>[{p.position ? p.position.map(n => (n != null ? n.toFixed(4) : '—')).join(', ') : ''}]</td>
+                  <td>[{p.velocity ? p.velocity.map(n => (n != null ? n.toFixed(4) : '—')).join(', ') : ''}]</td>
+                  <td>{p.fitness != null && !isNaN(p.fitness) ? p.fitness.toFixed(4) : '—'}</td>
+                  <td>[{p.pbestPosition ? p.pbestPosition.map(n => (n != null ? n.toFixed(4) : '—')).join(', ') : ''}]</td>
+                  <td>{p.pbestFitness != null && !isNaN(p.pbestFitness) ? p.pbestFitness.toFixed(4) : '—'}</td>
                   <td>
                     {isLeader ? (
                       <span style={{

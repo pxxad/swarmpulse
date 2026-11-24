@@ -107,8 +107,8 @@ export function createPSOEngine(problemKey = 'problem1', userParams = {}) {
   }
 
   function takeSnapshot(actionDescription = '') {
-    const sumFitness = particles.reduce((acc, p) => acc + p.fitness, 0);
-    const meanFitness = sumFitness / particles.length;
+    const sumFitness = particles.reduce((acc, p) => acc + (p.fitness ?? 0), 0);
+    const meanFitness = particles.length > 0 ? sumFitness / particles.length : 0;
 
     return {
       iteration: currentIteration,
@@ -120,10 +120,10 @@ export function createPSOEngine(problemKey = 'problem1', userParams = {}) {
         velocity: [...p.velocity],
         pbestPosition: [...p.pbestPosition]
       })),
-      gbestPosition: [...gbestPosition],
+      gbestPosition: gbestPosition ? [...gbestPosition] : [],
       gbestFitness,
       gbestParticleId,
-      iterationGbestPosition: [...iterationGbestPosition],
+      iterationGbestPosition: iterationGbestPosition ? [...iterationGbestPosition] : [],
       iterationGbestFitness,
       iterationGbestParticleId,
       meanFitness,
@@ -154,6 +154,7 @@ export function createPSOEngine(problemKey = 'problem1', userParams = {}) {
     // Particle to update
     const pIndex = activeParticleIndex;
     const currentP = particles[pIndex];
+    if (!currentP) return false;
 
     // Determine r1, r2 (lecture hand calculation draws if preset, otherwise PRNG)
     const lectureR = getLectureR(currentIteration + 1, pIndex);
@@ -175,11 +176,17 @@ export function createPSOEngine(problemKey = 'problem1', userParams = {}) {
     particles[pIndex] = updatedParticle;
 
     breakdown.iterationGbest = {
-      position: [...iterationGbestPosition],
+      position: iterationGbestPosition ? [...iterationGbestPosition] : [],
       fitness: iterationGbestFitness,
       particleId: iterationGbestParticleId
     };
     breakdown.currentIteration = currentIteration;
+    breakdown.improvedGbest = false;
+    breakdown.gbestAfter = {
+      fitness: gbestFitness,
+      position: gbestPosition ? [...gbestPosition] : [],
+      particleId: gbestParticleId
+    };
     lastBreakdown = breakdown;
 
     // Advance active particle pointer
@@ -204,6 +211,11 @@ export function createPSOEngine(problemKey = 'problem1', userParams = {}) {
       }
 
       breakdown.improvedGbest = improvedGbest;
+      breakdown.gbestAfter = {
+        fitness: gbestFitness,
+        position: gbestPosition ? [...gbestPosition] : [],
+        particleId: gbestParticleId
+      };
 
       // Lock new gbest for the upcoming iteration
       iterationGbestPosition = [...gbestPosition];

@@ -24,13 +24,18 @@ export default function StepInspector({ breakdown, problem, currentW }) {
     );
   }
 
-  const dim0 = breakdown.dimensions[0];
+  const dim0 = breakdown.dimensions && breakdown.dimensions.length > 0 ? breakdown.dimensions[0] : null;
+  const anyClipped = breakdown.dimensions ? breakdown.dimensions.some(d => d.wasClipped) : false;
+  const anyClamped = breakdown.dimensions ? breakdown.dimensions.some(d => d.wasClamped) : false;
+
+  const currentIterNum = breakdown.currentIteration != null ? breakdown.currentIteration + 1 : 1;
+  const inertiaVal = currentW != null ? currentW.toFixed(4) : '—';
 
   return (
     <div className="card">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
         <h3 className="card-title" style={{ margin: 0 }}>
-          Step Inspector: Particle {breakdown.particleId}
+          Step Inspector: Particle {breakdown.particleId ?? '—'}
         </h3>
         <div className="nav-tabs" style={{ padding: '2px' }}>
           <button
@@ -51,7 +56,7 @@ export default function StepInspector({ breakdown, problem, currentW }) {
       </div>
 
       <p className="card-subtitle">
-        Iteration {breakdown.currentIteration + 1} &bull; Inertia Weight w = {currentW.toFixed(4)}
+        Iteration {currentIterNum} &bull; Inertia Weight w = {inertiaVal}
       </p>
 
       {viewMode === 'summary' ? (
@@ -60,18 +65,18 @@ export default function StepInspector({ breakdown, problem, currentW }) {
           <div className="math-term-box">
             <div className="math-term-title">Position &amp; Velocity Update</div>
             <div style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', lineHeight: '1.6' }}>
-              <div>Old x: [{breakdown.oldPosition.map(n => n.toFixed(4)).join(', ')}]</div>
-              <div>Velocity v: [{breakdown.newVelocity.map(n => n.toFixed(4)).join(', ')}]</div>
+              <div>Old x: [{breakdown.oldPosition ? breakdown.oldPosition.map(n => (n != null ? n.toFixed(4) : '—')).join(', ') : ''}]</div>
+              <div>Velocity v: [{breakdown.newVelocity ? breakdown.newVelocity.map(n => (n != null ? n.toFixed(4) : '—')).join(', ') : ''}]</div>
               <div style={{ fontWeight: 700, color: 'var(--color-primary)' }}>
-                New x: [{breakdown.newPosition.map(n => n.toFixed(4)).join(', ')}]
+                New x: [{breakdown.newPosition ? breakdown.newPosition.map(n => (n != null ? n.toFixed(4) : '—')).join(', ') : ''}]
               </div>
             </div>
-            {dim0.wasClipped && (
+            {anyClipped && dim0 && dim0.bounds && (
               <div style={{ marginTop: '6px', fontSize: '11px', color: 'var(--color-warning)', fontWeight: 600 }}>
                 Clipped to search bounds [{dim0.bounds[0]}, {dim0.bounds[1]}]
               </div>
             )}
-            {dim0.wasClamped && (
+            {anyClamped && dim0 && dim0.vMax != null && (
               <div style={{ marginTop: '4px', fontSize: '11px', color: 'var(--color-primary)', fontWeight: 600 }}>
                 Velocity clamped to ±{dim0.vMax.toFixed(2)}
               </div>
@@ -82,9 +87,9 @@ export default function StepInspector({ breakdown, problem, currentW }) {
           <div className="math-term-box">
             <div className="math-term-title">Objective Evaluation</div>
             <div style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', lineHeight: '1.6' }}>
-              <div>Evaluated f(x): <strong style={{ color: 'var(--color-text-main)' }}>{breakdown.newFitness.toFixed(4)}</strong></div>
-              <div>Previous f: {breakdown.oldFitness.toFixed(4)}</div>
-              <div>Target optimum: {problem.knownOptimum.value}</div>
+              <div>Evaluated f(x): <strong style={{ color: 'var(--color-text-main)' }}>{breakdown.newFitness != null ? breakdown.newFitness.toFixed(4) : '—'}</strong></div>
+              <div>Previous f: {breakdown.oldFitness != null ? breakdown.oldFitness.toFixed(4) : '—'}</div>
+              <div>Target optimum: {problem?.knownOptimum?.value ?? '—'}</div>
             </div>
           </div>
 
@@ -96,11 +101,11 @@ export default function StepInspector({ breakdown, problem, currentW }) {
                 Personal best:{' '}
                 {breakdown.improvedPbest ? (
                   <span style={{ color: 'var(--color-success)', fontWeight: 700 }}>
-                    Improved ({breakdown.newPbestFitness.toFixed(4)})
+                    Improved ({breakdown.newPbestFitness != null ? breakdown.newPbestFitness.toFixed(4) : '—'})
                   </span>
                 ) : (
                   <span style={{ color: 'var(--color-text-muted)' }}>
-                    Retained ({breakdown.newPbestFitness.toFixed(4)})
+                    Retained ({breakdown.newPbestFitness != null ? breakdown.newPbestFitness.toFixed(4) : '—'})
                   </span>
                 )}
               </div>
@@ -108,7 +113,7 @@ export default function StepInspector({ breakdown, problem, currentW }) {
                 Global best:{' '}
                 {breakdown.improvedGbest ? (
                   <span style={{ color: '#b45309', fontWeight: 700 }}>
-                    New Swarm Leader ({breakdown.gbestAfter.fitness.toFixed(4)})
+                    New Swarm Leader ({breakdown.gbestAfter?.fitness != null ? breakdown.gbestAfter.fitness.toFixed(4) : (breakdown.newFitness != null ? breakdown.newFitness.toFixed(4) : '—')})
                   </span>
                 ) : (
                   <span style={{ color: 'var(--color-text-muted)' }}>
@@ -122,7 +127,7 @@ export default function StepInspector({ breakdown, problem, currentW }) {
       ) : (
         /* Detailed Numerical Formula Breakdown */
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {breakdown.dimensions.map((dim) => (
+          {(breakdown.dimensions || []).map((dim) => (
             <div
               key={dim.dimIndex}
               style={{
@@ -139,17 +144,17 @@ export default function StepInspector({ breakdown, problem, currentW }) {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '10px' }}>
                 <div style={{ fontSize: '12px', fontFamily: 'var(--font-mono)' }}>
                   <div style={{ color: 'var(--color-text-muted)', fontSize: '11px' }}>Inertia Pull:</div>
-                  <div>w · v = {dim.w.toFixed(2)} × {dim.vOld.toFixed(4)} = <strong>{dim.inertiaTerm.toFixed(4)}</strong></div>
+                  <div>w · v = {dim.w != null ? dim.w.toFixed(2) : '—'} × {dim.vOld != null ? dim.vOld.toFixed(4) : '—'} = <strong>{dim.inertiaTerm != null ? dim.inertiaTerm.toFixed(4) : '—'}</strong></div>
                 </div>
 
                 <div style={{ fontSize: '12px', fontFamily: 'var(--font-mono)' }}>
                   <div style={{ color: 'var(--color-text-muted)', fontSize: '11px' }}>Cognitive Pull:</div>
-                  <div>c₁·r₁·(p - x) = {dim.c1.toFixed(1)} × {dim.r1.toFixed(2)} × ({dim.pbest.toFixed(4)} - {dim.xOld.toFixed(4)}) = <strong>{dim.cognitiveTerm.toFixed(4)}</strong></div>
+                  <div>c₁·r₁·(p - x) = {dim.c1 != null ? dim.c1.toFixed(1) : '—'} × {dim.r1 != null ? dim.r1.toFixed(2) : '—'} × ({dim.pbest != null ? dim.pbest.toFixed(4) : '—'} - {dim.xOld != null ? dim.xOld.toFixed(4) : '—'}) = <strong>{dim.cognitiveTerm != null ? dim.cognitiveTerm.toFixed(4) : '—'}</strong></div>
                 </div>
 
                 <div style={{ fontSize: '12px', fontFamily: 'var(--font-mono)' }}>
                   <div style={{ color: 'var(--color-text-muted)', fontSize: '11px' }}>Social Pull:</div>
-                  <div>c₂·r₂·(g - x) = {dim.c2.toFixed(1)} × {dim.r2.toFixed(2)} × ({dim.gbest.toFixed(4)} - {dim.xOld.toFixed(4)}) = <strong>{dim.socialTerm.toFixed(4)}</strong></div>
+                  <div>c₂·r₂·(g - x) = {dim.c2 != null ? dim.c2.toFixed(1) : '—'} × {dim.r2 != null ? dim.r2.toFixed(2) : '—'} × ({dim.gbest != null ? dim.gbest.toFixed(4) : '—'} - {dim.xOld != null ? dim.xOld.toFixed(4) : '—'}) = <strong>{dim.socialTerm != null ? dim.socialTerm.toFixed(4) : '—'}</strong></div>
                 </div>
               </div>
 
@@ -165,11 +170,11 @@ export default function StepInspector({ breakdown, problem, currentW }) {
                 gap: '8px'
               }}>
                 <div>
-                  v_new = {dim.inertiaTerm.toFixed(4)} + {dim.cognitiveTerm.toFixed(4)} + {dim.socialTerm.toFixed(4)} = <strong>{dim.finalV.toFixed(4)}</strong>
+                  v_new = {dim.inertiaTerm != null ? dim.inertiaTerm.toFixed(4) : '—'} + {dim.cognitiveTerm != null ? dim.cognitiveTerm.toFixed(4) : '—'} + {dim.socialTerm != null ? dim.socialTerm.toFixed(4) : '—'} = <strong>{dim.finalV != null ? dim.finalV.toFixed(4) : '—'}</strong>
                   {dim.wasClamped && <span style={{ color: 'var(--color-primary)', marginLeft: '6px' }}>(Clamped)</span>}
                 </div>
                 <div>
-                  x_new = {dim.xOld.toFixed(4)} + {dim.finalV.toFixed(4)} = <strong>{dim.finalX.toFixed(4)}</strong>
+                  x_new = {dim.xOld != null ? dim.xOld.toFixed(4) : '—'} + {dim.finalV != null ? dim.finalV.toFixed(4) : '—'} = <strong>{dim.finalX != null ? dim.finalX.toFixed(4) : '—'}</strong>
                   {dim.wasClipped && <span style={{ color: 'var(--color-warning)', marginLeft: '6px' }}>(Clipped)</span>}
                 </div>
               </div>

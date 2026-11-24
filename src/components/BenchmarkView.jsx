@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PROBLEMS } from '../engine/problems.js';
 import { createPSOEngine } from '../engine/psoEngine.js';
 
@@ -6,7 +6,11 @@ export default function BenchmarkView({ activeProblemKey }) {
   const [benchmarkResults, setBenchmarkResults] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
 
-  const problem = PROBLEMS[activeProblemKey];
+  const problem = PROBLEMS[activeProblemKey] || PROBLEMS.problem1;
+
+  useEffect(() => {
+    setBenchmarkResults(null);
+  }, [activeProblemKey]);
 
   const runBenchmarkBatch = () => {
     setIsRunning(true);
@@ -157,7 +161,7 @@ export default function BenchmarkView({ activeProblemKey }) {
             <div className="math-term-box">
               <div className="math-term-title">Mean Final Fitness</div>
               <div className="math-term-equation" style={{ color: 'var(--color-primary)' }}>
-                {benchmarkResults.mean.toFixed(6)}
+                {benchmarkResults.mean != null && !isNaN(benchmarkResults.mean) ? benchmarkResults.mean.toFixed(6) : '—'}
               </div>
               <div className="math-term-desc">Average outcome over {benchmarkResults.runs} trials</div>
             </div>
@@ -165,7 +169,7 @@ export default function BenchmarkView({ activeProblemKey }) {
             <div className="math-term-box">
               <div className="math-term-title">Standard Deviation (σ)</div>
               <div className="math-term-equation">
-                {benchmarkResults.stdDev.toExponential(3)}
+                {benchmarkResults.stdDev != null && !isNaN(benchmarkResults.stdDev) ? benchmarkResults.stdDev.toExponential(3) : '—'}
               </div>
               <div className="math-term-desc">Empirical dispersion across seeds</div>
             </div>
@@ -173,7 +177,7 @@ export default function BenchmarkView({ activeProblemKey }) {
             <div className="math-term-box">
               <div className="math-term-title">Best Trial Recorded</div>
               <div className="math-term-equation" style={{ color: 'var(--color-success)' }}>
-                {benchmarkResults.best.toFixed(6)}
+                {benchmarkResults.best != null && !isNaN(benchmarkResults.best) ? benchmarkResults.best.toFixed(6) : '—'}
               </div>
               <div className="math-term-desc">Closest to theoretical optimum</div>
             </div>

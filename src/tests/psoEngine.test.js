@@ -62,4 +62,24 @@ console.log('--- RUNNING PSO ENGINE TESTS ---');
   console.log('✓ Test 4: Problem 4 Peaks maximization monotonicity passed');
 }
 
+// Test 5: Step breakdown integrity across all problems
+{
+  const problemKeys = ['problem1', 'problem2', 'problem3', 'problem4'];
+  for (const pKey of problemKeys) {
+    const engine = createPSOEngine(pKey, { maxIterations: 5 });
+    // Step through particles
+    for (let i = 0; i < 15; i++) {
+      engine.stepParticle();
+      const st = engine.getState();
+      assert(st.lastBreakdown !== null, `lastBreakdown must exist for ${pKey} after step`);
+      assert(st.lastBreakdown.gbestAfter !== undefined, `gbestAfter must not be undefined for ${pKey}`);
+      assert(st.lastBreakdown.gbestAfter.fitness !== undefined, `gbestAfter.fitness must not be undefined for ${pKey}`);
+      assert(typeof st.lastBreakdown.gbestAfter.fitness === 'number', `gbestAfter.fitness must be a number for ${pKey}`);
+      assert(typeof st.lastBreakdown.improvedGbest === 'boolean', `improvedGbest must be boolean for ${pKey}`);
+      assert(typeof st.meanFitness === 'number' && !isNaN(st.meanFitness), `meanFitness must be valid number for ${pKey}`);
+    }
+  }
+  console.log('✓ Test 5: Stepping breakdown integrity across all 4 problem statements verified');
+}
+
 console.log('ALL PSO ENGINE TESTS PASSED SUCCESSFULLY!\n');

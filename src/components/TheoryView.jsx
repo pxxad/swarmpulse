@@ -2,7 +2,7 @@ import React from 'react';
 import { PROBLEMS } from '../engine/problems.js';
 
 export default function TheoryView({ activeProblemKey, onProceedToParams }) {
-  const problem = PROBLEMS[activeProblemKey];
+  const problem = PROBLEMS[activeProblemKey] || PROBLEMS.problem1;
 
   return (
     <div className="theory-container">
@@ -34,12 +34,12 @@ export default function TheoryView({ activeProblemKey, onProceedToParams }) {
           </div>
           <div className="math-term-box">
             <div className="math-term-title">Search Space Bounds</div>
-            <div className="math-term-equation">[{problem.bounds[0]}, {problem.bounds[1]}]^{problem.dimensions}</div>
+            <div className="math-term-equation">[{problem.bounds?.[0] ?? '—'}, {problem.bounds?.[1] ?? '—'}]^{problem.dimensions}</div>
           </div>
           <div className="math-term-box">
             <div className="math-term-title">Known Theoretical Optimum</div>
             <div className="math-term-equation">
-              x* = {JSON.stringify(problem.knownOptimum.position)}, f(x*) = {problem.knownOptimum.value}
+              x* = {problem.knownOptimum?.position ? JSON.stringify(problem.knownOptimum.position) : '—'}, f(x*) = {problem.knownOptimum?.value ?? '—'}
             </div>
           </div>
         </div>

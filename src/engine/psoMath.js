@@ -62,9 +62,9 @@ export function updateParticle(particle, gbestPosition, options) {
 
   for (let d = 0; d < dim; d++) {
     const x_d = oldPosition[d];
-    const v_d = oldVelocity[d];
-    const p_d = particle.pbestPosition[d];
-    const g_d = gbestPosition[d];
+    const v_d = oldVelocity[d] ?? 0;
+    const p_d = particle.pbestPosition && particle.pbestPosition[d] !== undefined ? particle.pbestPosition[d] : x_d;
+    const g_d = gbestPosition && gbestPosition[d] !== undefined ? gbestPosition[d] : x_d;
 
     // Determine random numbers r1, r2
     let r1 = rValues && rValues[d] ? rValues[d].r1 : (prng ? prng.next() : Math.random());

@@ -7,7 +7,8 @@ export default function ParametersView({
   setParams,
   onLaunchSimulator
 }) {
-  const problem = PROBLEMS[activeProblemKey];
+  const problem = PROBLEMS[activeProblemKey] || PROBLEMS.problem1;
+  const currentParams = { ...(problem?.defaultParams || {}), ...(params || {}) };
 
   const handleResetToLecture = () => {
     setParams({ ...problem.defaultParams });
@@ -15,7 +16,7 @@ export default function ParametersView({
 
   const handleChange = (field, value) => {
     setParams(prev => ({
-      ...prev,
+      ...(prev || {}),
       [field]: value
     }));
   };
@@ -49,13 +50,13 @@ export default function ParametersView({
           <div className="form-group">
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
               <label className="form-label" style={{ margin: 0 }}>Swarm Size (N)</label>
-              <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '13px' }}>{params.swarmSize}</span>
+              <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '13px' }}>{currentParams.swarmSize}</span>
             </div>
             <input
               type="range"
               min="2"
               max="100"
-              value={params.swarmSize}
+              value={currentParams.swarmSize}
               onChange={(e) => handleChange('swarmSize', parseInt(e.target.value, 10))}
               style={{ width: '100%' }}
             />
@@ -65,13 +66,13 @@ export default function ParametersView({
           <div className="form-group">
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
               <label className="form-label" style={{ margin: 0 }}>Maximum Iterations (T)</label>
-              <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '13px' }}>{params.maxIterations}</span>
+              <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '13px' }}>{currentParams.maxIterations}</span>
             </div>
             <input
               type="range"
               min="5"
               max="200"
-              value={params.maxIterations}
+              value={currentParams.maxIterations}
               onChange={(e) => handleChange('maxIterations', parseInt(e.target.value, 10))}
               style={{ width: '100%' }}
             />
@@ -83,7 +84,7 @@ export default function ParametersView({
             <input
               type="number"
               className="form-input"
-              value={params.seed ?? 42}
+              value={currentParams.seed ?? 42}
               onChange={(e) => handleChange('seed', parseInt(e.target.value, 10) || 1)}
             />
             <div className="form-helper">Controls deterministic PRNG pseudo-random sequence for repeatability.</div>
@@ -99,7 +100,7 @@ export default function ParametersView({
             <label className="form-label">Inertia Mode</label>
             <select
               className="form-select"
-              value={params.inertiaType}
+              value={currentParams.inertiaType}
               onChange={(e) => handleChange('inertiaType', e.target.value)}
             >
               <option value="fixed">Constant Inertia (Fixed w)</option>
@@ -107,18 +108,18 @@ export default function ParametersView({
             </select>
           </div>
 
-          {params.inertiaType === 'fixed' ? (
+          {currentParams.inertiaType === 'fixed' ? (
             <div className="form-group">
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                 <label className="form-label" style={{ margin: 0 }}>Constant Inertia (w)</label>
-                <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '13px' }}>{params.inertiaWeight}</span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '13px' }}>{currentParams.inertiaWeight}</span>
               </div>
               <input
                 type="range"
                 min="0.1"
                 max="1.2"
                 step="0.05"
-                value={params.inertiaWeight}
+                value={currentParams.inertiaWeight}
                 onChange={(e) => handleChange('inertiaWeight', parseFloat(e.target.value))}
                 style={{ width: '100%' }}
               />
@@ -132,7 +133,7 @@ export default function ParametersView({
                   type="number"
                   step="0.05"
                   className="form-input"
-                  value={params.inertiaStart}
+                  value={currentParams.inertiaStart}
                   onChange={(e) => handleChange('inertiaStart', parseFloat(e.target.value))}
                 />
                 <div className="form-helper">High exploration start (e.g. 0.9)</div>
@@ -143,7 +144,7 @@ export default function ParametersView({
                   type="number"
                   step="0.05"
                   className="form-input"
-                  value={params.inertiaEnd}
+                  value={currentParams.inertiaEnd}
                   onChange={(e) => handleChange('inertiaEnd', parseFloat(e.target.value))}
                 />
                 <div className="form-helper">Fine exploitation end (e.g. 0.4)</div>
@@ -161,14 +162,14 @@ export default function ParametersView({
             <div className="form-group">
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                 <label className="form-label" style={{ margin: 0 }}>Cognitive (c₁)</label>
-                <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '13px' }}>{params.c1}</span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '13px' }}>{currentParams.c1}</span>
               </div>
               <input
                 type="range"
                 min="0.5"
                 max="3.0"
                 step="0.1"
-                value={params.c1}
+                value={currentParams.c1}
                 onChange={(e) => handleChange('c1', parseFloat(e.target.value))}
                 style={{ width: '100%' }}
               />
@@ -178,14 +179,14 @@ export default function ParametersView({
             <div className="form-group">
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                 <label className="form-label" style={{ margin: 0 }}>Social (c₂)</label>
-                <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '13px' }}>{params.c2}</span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '13px' }}>{currentParams.c2}</span>
               </div>
               <input
                 type="range"
                 min="0.5"
                 max="3.0"
                 step="0.1"
-                value={params.c2}
+                value={currentParams.c2}
                 onChange={(e) => handleChange('c2', parseFloat(e.target.value))}
                 style={{ width: '100%' }}
               />
@@ -203,7 +204,7 @@ export default function ParametersView({
             <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}>
               <input
                 type="checkbox"
-                checked={params.useVelocityClamp}
+                checked={currentParams.useVelocityClamp}
                 onChange={(e) => handleChange('useVelocityClamp', e.target.checked)}
               />
               Enable Velocity Clamping (v_max)
@@ -211,18 +212,18 @@ export default function ParametersView({
             <div className="form-helper">Clamps particle speed to a fraction of the search range.</div>
           </div>
 
-          {params.useVelocityClamp && (
+          {currentParams.useVelocityClamp && (
             <div className="form-group">
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                 <label className="form-label" style={{ margin: 0 }}>Clamp Range Percentage</label>
-                <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '13px' }}>{params.clampPercent}%</span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '13px' }}>{currentParams.clampPercent}%</span>
               </div>
               <input
                 type="range"
                 min="5"
                 max="50"
                 step="5"
-                value={params.clampPercent}
+                value={currentParams.clampPercent}
                 onChange={(e) => handleChange('clampPercent', parseInt(e.target.value, 10))}
                 style={{ width: '100%' }}
               />

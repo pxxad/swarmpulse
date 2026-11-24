@@ -18,7 +18,7 @@ export default function App() {
     return map;
   });
 
-  const currentParams = paramsMap[activeProblemKey];
+  const currentParams = paramsMap[activeProblemKey] || PROBLEMS[activeProblemKey]?.defaultParams || {};
 
   const setParams = (updater) => {
     setParamsMap(prev => {

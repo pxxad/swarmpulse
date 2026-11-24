@@ -14,8 +14,16 @@ export default function SimulatorView({ engine, onConfigureParams }) {
 
   // Sync state with engine
   const refreshState = () => {
-    setEngineState(engine.getState());
+    if (engine) {
+      setEngineState(engine.getState());
+    }
   };
+
+  useEffect(() => {
+    if (engine) {
+      setEngineState(engine.getState());
+    }
+  }, [engine]);
 
   const handleNextStep = () => {
     if (stepMode === 'particle') {
@@ -71,7 +79,21 @@ export default function SimulatorView({ engine, onConfigureParams }) {
     };
   }, [isPlaying, playbackSpeed, stepMode, engine]);
 
-  const { problem, config, currentIteration, activeParticleIndex, currentW, particles, gbestPosition, gbestFitness, gbestParticleId, meanFitness, lastBreakdown, history, isCompleted } = engineState;
+  const {
+    problem,
+    config = {},
+    currentIteration = 0,
+    activeParticleIndex = 0,
+    currentW = 0,
+    particles = [],
+    gbestPosition = [],
+    gbestFitness = null,
+    gbestParticleId = 'P1',
+    meanFitness = 0,
+    lastBreakdown = null,
+    history = [],
+    isCompleted = false
+  } = engineState || {};
 
   return (
     <div className="simulator-container">
@@ -158,7 +180,7 @@ export default function SimulatorView({ engine, onConfigureParams }) {
         <div className="hud-card">
           <div className="hud-label">Iteration Progress</div>
           <div className="hud-value">
-            {currentIteration} <span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--color-text-muted)' }}>/ {config.maxIterations}</span>
+            {currentIteration} <span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--color-text-muted)' }}>/ {config.maxIterations ?? 0}</span>
           </div>
           <div className="hud-sub">
             {isCompleted ? 'Completed' : `Active Particle: ${particles[activeParticleIndex]?.id ?? 'None'}`}
@@ -168,17 +190,17 @@ export default function SimulatorView({ engine, onConfigureParams }) {
         <div className="hud-card">
           <div className="hud-label">Global Best f(g*)</div>
           <div className="hud-value" style={{ color: 'var(--color-primary)' }}>
-            {gbestFitness !== null ? gbestFitness.toFixed(4) : '—'}
+            {gbestFitness !== null && !isNaN(gbestFitness) ? gbestFitness.toFixed(4) : '—'}
           </div>
           <div className="hud-sub">
-            Leader: {gbestParticleId ?? 'P1'} | Target: {problem.knownOptimum.value}
+            Leader: {gbestParticleId ?? 'P1'} | Target: {problem?.knownOptimum?.value ?? '—'}
           </div>
         </div>
 
         <div className="hud-card">
           <div className="hud-label">Swarm Mean f</div>
           <div className="hud-value">
-            {meanFitness.toFixed(4)}
+            {meanFitness != null && !isNaN(meanFitness) ? meanFitness.toFixed(4) : '—'}
           </div>
           <div className="hud-sub">
             {particles.length} particles active
@@ -188,7 +210,7 @@ export default function SimulatorView({ engine, onConfigureParams }) {
         <div className="hud-card">
           <div className="hud-label">Current Inertia (w)</div>
           <div className="hud-value" style={{ color: 'var(--color-accent)' }}>
-            {currentW.toFixed(4)}
+            {currentW != null && !isNaN(currentW) ? currentW.toFixed(4) : '—'}
           </div>
           <div className="hud-sub">
             {config.inertiaType === 'decay' ? 'Linear decay mode' : 'Fixed constant'}

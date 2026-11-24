@@ -129,7 +129,7 @@ export default function Visualizer2D({
           </text>
 
           {/* Global Best Beacon */}
-          {gbestPosition && gbestPosition.length >= 2 && (
+          {gbestPosition && gbestPosition.length >= 2 && gbestPosition[0] != null && gbestPosition[1] != null && (
             <g transform={`translate(${scaleX(gbestPosition[0])}, ${scaleY(gbestPosition[1])})`}>
               <circle r="14" fill="none" stroke="#d97706" strokeWidth="1.5" strokeDasharray="3 3" />
               <circle r="3" fill="#d97706" />
@@ -140,11 +140,12 @@ export default function Visualizer2D({
           )}
 
           {/* Particles */}
-          {particles.map((p, idx) => {
+          {(particles || []).map((p, idx) => {
+            if (!p || !p.position || p.position.length < 2 || p.position[0] == null || p.position[1] == null) return null;
             const px = scaleX(p.position[0]);
             const py = scaleY(p.position[1]);
-            const vx = p.velocity[0];
-            const vy = p.velocity[1];
+            const vx = p.velocity && p.velocity[0] != null ? p.velocity[0] : 0;
+            const vy = p.velocity && p.velocity[1] != null ? p.velocity[1] : 0;
             const isActive = idx === activeParticleIndex;
 
             const arrowFactor = 4;
@@ -153,7 +154,7 @@ export default function Visualizer2D({
 
             return (
               <g
-                key={p.id}
+                key={p.id ?? idx}
                 style={{ cursor: 'pointer' }}
                 onMouseEnter={() => setHoveredParticle(p)}
                 onMouseLeave={() => setHoveredParticle(null)}
@@ -196,7 +197,7 @@ export default function Visualizer2D({
             pointerEvents: 'none',
             zIndex: 10
           }}>
-            {hoveredParticle.id}: [{hoveredParticle.position[0].toFixed(3)}, {hoveredParticle.position[1].toFixed(3)}] | f = {hoveredParticle.fitness.toFixed(4)}
+            {hoveredParticle.id}: [{hoveredParticle.position?.[0] != null ? hoveredParticle.position[0].toFixed(3) : '—'}, {hoveredParticle.position?.[1] != null ? hoveredParticle.position[1].toFixed(3) : '—'}] | f = {hoveredParticle.fitness != null ? hoveredParticle.fitness.toFixed(4) : '—'}
           </div>
         )}
       </div>

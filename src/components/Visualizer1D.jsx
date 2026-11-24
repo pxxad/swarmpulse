@@ -96,7 +96,7 @@ export default function Visualizer1D({
         <path d={pathData} fill="none" stroke="#0284c7" strokeWidth="2.5" />
 
         {/* Global Best Indicator */}
-        {gbestPosition && gbestPosition.length > 0 && (
+        {gbestPosition && gbestPosition.length > 0 && gbestPosition[0] != null && gbestFitness != null && !isNaN(gbestFitness) && (
           <g transform={`translate(${scaleX(gbestPosition[0])}, ${scaleY(gbestFitness)})`}>
             <circle r="12" fill="none" stroke="#d97706" strokeWidth="1.5" strokeDasharray="3 3" />
             <circle r="3" fill="#d97706" />
@@ -107,17 +107,18 @@ export default function Visualizer1D({
         )}
 
         {/* Particles */}
-        {particles.map((p, idx) => {
+        {(particles || []).map((p, idx) => {
+          if (!p || !p.position || p.position.length === 0 || p.position[0] == null) return null;
           const px = scaleX(p.position[0]);
-          const py = scaleY(p.fitness);
+          const py = p.fitness != null && !isNaN(p.fitness) ? scaleY(p.fitness) : (height - paddingY);
           const isActive = idx === activeParticleIndex;
-          const isGbest = gbestPosition && Math.abs(p.position[0] - gbestPosition[0]) < 1e-4;
-          const vel = p.velocity[0];
+          const isGbest = gbestPosition && gbestPosition.length > 0 && gbestPosition[0] != null && Math.abs(p.position[0] - gbestPosition[0]) < 1e-4;
+          const vel = p.velocity && p.velocity[0] != null ? p.velocity[0] : 0;
           const arrowLength = Math.max(-36, Math.min(36, vel * 12));
 
           return (
             <g
-              key={p.id}
+              key={p.id ?? idx}
               transform={`translate(${px}, ${py})`}
               style={{ cursor: 'pointer' }}
               onMouseEnter={() => setHoveredParticle(p)}
@@ -158,7 +159,7 @@ export default function Visualizer1D({
                 fill="var(--color-text-main)"
                 fontFamily="var(--font-mono)"
               >
-                {p.id}
+                {p.id ?? `P${idx + 1}`}
               </text>
             </g>
           );
@@ -178,7 +179,7 @@ export default function Visualizer1D({
           fontFamily: 'var(--font-mono)',
           pointerEvents: 'none'
         }}>
-          {hoveredParticle.id}: x = {hoveredParticle.position[0].toFixed(4)} | v = {hoveredParticle.velocity[0].toFixed(4)} | f(x) = {hoveredParticle.fitness.toFixed(4)}
+          {hoveredParticle.id}: x = {hoveredParticle.position?.[0] != null ? hoveredParticle.position[0].toFixed(4) : '—'} | v = {hoveredParticle.velocity?.[0] != null ? hoveredParticle.velocity[0].toFixed(4) : '—'} | f(x) = {hoveredParticle.fitness != null ? hoveredParticle.fitness.toFixed(4) : '—'}
         </div>
       )}
     </div>
